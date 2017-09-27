@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">IoT HomeSecurty</string>
+    <string name="state_normal">화재가 발생할 확률이 매우 적은 안전한 상태입니다.
+        하지만 화재는 언제 발생할지 모르니 조금만 주의해주세요!</string>
+    <string name="state_warning">화재가 발생할 수 있는 확률이 높아진 상태이며, 이미 화재가 발생 단계에 있을
+        수 있습니다. 확인해보세요.</string>
+    <string name="state_danger">화재가 발생하였습니다! 소화기를 찾아 초기 진압 후 119에 신고하여
+        현재 상황을 자세히 말해주세요.</string>
+</resources>
