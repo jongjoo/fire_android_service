@@ -28,8 +28,9 @@ public class CameraActivity extends AppCompatActivity {
         setContentView(R.layout.activity_camera);
 
         mVideoView = (VideoView) findViewById(R.id.camera_view);
-        path = "rtsp://192.168.0.148:8554/test";
+        path = "rtsp://172.20.10.10:8554/test";
         //path = "rtsp://mpv.cdn3.bigCDN.com:554/bigCDN/mp4:bigbuckbunnyiphone_400.mp4";
+        //path = "rtsp://184.72.239.149/vod/mp4:BigBuckBunny_175k.mov";
         mVideoView.setVideoPath(path);
         mVideoView.setMediaController(new MediaController(this));
         mVideoView.requestFocus();

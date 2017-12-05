@@ -1,23 +1,25 @@
 package com.example.lsm.firesensorproject;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 
+import static com.example.lsm.firesensorproject.DataService.str_state;
 import static com.example.lsm.firesensorproject.SettingFragment.push_flag;
 
 public class PushService extends Service {
     public static NotificationManager noti_manager;
     public static Notification notifi;
-    public static PushThread thread;
-    public static PushServiceHandler handler;
-    public static int temp, humid;
+    public static PushThread push_thread;
+    public static PushHandler push_handler;
     public static int noti_id = 1;
 
     @Override
@@ -33,21 +35,17 @@ public class PushService extends Service {
         super.onCreate();
         // 서비스에서 가장 먼저 호출됨(최초에 한번만)
 
-        temp = 27;
-        humid = 10;
-
         //알림(Notification)을 관리하는 NotificationManager 얻어오기
         noti_manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        handler = new PushServiceHandler();
-        thread = new PushThread(handler);
-        thread.start();
+        push_handler = new PushHandler();
+        push_thread = new PushThread(push_handler);
+        push_thread.start();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // 서비스가 호출될 때마다 실행
-
         return START_STICKY;
     }
 
@@ -60,7 +58,7 @@ public class PushService extends Service {
         //noti_manager.cancel(id);
     }
 
-    class PushServiceHandler extends Handler {
+    class PushHandler extends Handler {
         @Override
         public void handleMessage(android.os.Message msg) {
             if (push_flag) {
@@ -71,7 +69,8 @@ public class PushService extends Service {
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(PushService.this)
                         .setSmallIcon(R.drawable.app_icon)  //상태표시줄에 보이는 아이콘 모양
                         .setContentTitle("화재 감지 중입니다.")                        //알림창에서의 제목
-                        .setContentText("현재 상태: 정상    온도: " + String.valueOf(temp) + "℃    습도: " + String.valueOf(humid) + "%");   //알림창에서의 글씨
+                        .setContentText("현재 상태: " + str_state +"    온도: " +
+                                DataTempLoad() + "℃    습도: " + DataMoisLoad() + "%");   //알림창에서의 글씨
 
                 //알림을 확인했을 때(알림창 클릭) MainActivity 실행
                 builder.setContentIntent(pendingIntent);   //PendingIntent 설정
@@ -81,15 +80,20 @@ public class PushService extends Service {
                 notifi.flags |= Notification.FLAG_ONGOING_EVENT;  //노티피케이션이 알림에 뜨지 않고 진행중에 뜨게 되는 플래그
                 noti_manager.notify(noti_id, notifi);    //NotificationManager가 알림(Notification)을 표시, id는 알림구분용
 
-                temp++;
-                humid++;
-
-                if (temp == 100) {
-                    temp = 27;
-                    humid = 10;
-                }
             } else
                 noti_manager.cancel(noti_id);
         }
+    }
+
+
+    //온도 데이터 값 불러오기 (SharedPreference)
+    private String DataTempLoad() {
+        SharedPreferences pref = getSharedPreferences("DataTemp", Activity.MODE_PRIVATE);
+        return pref.getString("Data", "null");
+    }
+    //습도 데이터 값 불러오기 (SharedPreference)
+    private String DataMoisLoad() {
+        SharedPreferences pref = getSharedPreferences("DataMois", Activity.MODE_PRIVATE);
+        return pref.getString("Data", "null");
     }
 }

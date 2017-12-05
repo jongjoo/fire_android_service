@@ -3,7 +3,7 @@
 
     <PreferenceCategory android:title="가스 차단">
         <SwitchPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="key_GasvalveShut"
             android:summary="움직임이 없을 경우 가스밸브를 자동으로 차단합니다."
             android:title="가스 자동 차단 모드" />
@@ -16,18 +16,29 @@
         </Preference>
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="자동 SMS 발송">
+    <PreferenceCategory android:title="감지">
         <SwitchPreference
             android:defaultValue="true"
-            android:key="key_sendSMS119"
-            android:summary="화재가 발생할 경우 119에 SMS가 전송됩니다."
-            android:title="119 자동 문자 발송" />
+            android:key="key_MotionMode"
+            android:summary="움직임이 있을 경우 화재 감지 서비스를 중지합니다"
+            android:title="사람 감지 모드" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="자동 SMS 발송">
         <Preference
-            android:defaultValue="0"
-            android:dependency="key_sendSMS119"
             android:key="key_AddPhoneNumber"
-            android:summary="등록한 번호의 핸드폰으로도 SMS가 전송됩니다."
+            android:summary="화재 발생시 등록한 번호의 핸드폰으로도 SMS가 전송됩니다."
             android:title="추가로 번호 등록하기">
+        </Preference>
+        <Preference
+            android:key="key_SetAddress"
+            android:summary="화재 발생 시 119에 SMS로 전송되는 주소 정보를 설정합니다."
+            android:title="주소 설정하기">
+        </Preference>
+        <Preference
+            android:key="key_ShowAddress"
+            android:summary="입력된 주소 정보를 확인합니다."
+            android:title="주소 확인">
         </Preference>
     </PreferenceCategory>
 
@@ -44,10 +55,20 @@
             android:title="푸쉬 알림 받기" />
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="로그아웃">
+        <Preference
+            android:key="key_Logout"
+            android:summary="기기에서 로그아웃합니다."
+            android:title="로그아웃" >
+            <intent
+                android:targetClass="com.example.lsm.firesensorproject.LoginActivity"
+                android:targetPackage="com.example.lsm.firesensorproject" />
+        </Preference>
+    </PreferenceCategory>
 
     <PreferenceCategory android:title="어플 정보">
         <Preference
-            android:summary="개발자 정보를 확인합니다"
+            android:summary="개발자 정보를 확인합니다."
             android:title="개발자 정보">
             <intent
                 android:targetClass="com.example.lsm.firesensorproject.MadeByActivity"

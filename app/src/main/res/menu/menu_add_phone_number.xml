@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/item_get_phone_number"
+        android:title="추가"/>
+    <item
+        android:id="@+id/item_del_phone_number"
+        android:title="삭제"/>
+    <item
+        android:id="@+id/item_send_sms"
+        android:title="문자보내기(테스트)"/>
+</menu>

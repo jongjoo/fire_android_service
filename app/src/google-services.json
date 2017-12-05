@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "74561814885",
+    "firebase_url": "https://firekang-5b7a5.firebaseio.com",
+    "project_id": "firekang-5b7a5",
+    "storage_bucket": "firekang-5b7a5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:74561814885:android:07d3e975da2cbc97",
+        "android_client_info": {
+          "package_name": "com.FireSensorProject.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "74561814885-moor5rh4r046e081bhsnifquv0lm3fae.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgLWv8CXduE65M5n32zhYW8SfKztjzUWY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

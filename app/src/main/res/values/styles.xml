@@ -5,7 +5,6 @@
         <!-- Customize your theme here. -->
         <item name="colorPrimary">#BB4455</item>
         <item name="colorPrimaryDark">#883344</item>
-        <item name="colorControlNormal">#BB4455</item>
         <item name="colorAccent">#CC5566</item>
     </style>
 
@@ -13,9 +12,11 @@
         <item name="android:gravity">center_vertical</item>
         <item name="android:thumb">@drawable/switch_thumb_selector</item>
         <item name="android:track">@drawable/switch_track_selector</item>
-        <item name="android:textOn">ON</item>
-        <item name="android:textOff">OFF</item>
+        <item name="android:textOn">열림</item>
+        <item name="android:textOff">닫힘</item>
         <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#CC5566</item>
+        <item name="android:textSize">10dp</item>
         <item name="android:showText">true</item>
     </style>
 

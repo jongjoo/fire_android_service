@@ -1,103 +1,138 @@
 package com.example.lsm.firesensorproject;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
-import android.widget.CompoundButton;
 import android.widget.ImageButton;
-import android.widget.Switch;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+
 public class MainActivity extends AppCompatActivity {
-    private static final int DIALOG_GASVALVE_OPEN_MESSAGE = 1;
-    private static final int DIALOG_GASVALVE_CLOSE_MESSAGE = 2;
-    private static int flag = 0;
-    private static String temp = "", humid = "", smoke = "", result;
-    Context mContext = this;
-    Intent intent;
+    private Context mContext = this;
+    private Intent intent_data, intent_push;
+    private TextView tv_temp, tv_mois, tv_move_sense, tv_state;
+    private ImageView imageView;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //------------------------------
-        //   항상 떠있는 상단바 알림
-        //------------------------------
-        intent = new Intent(
+        tv_temp = (TextView) findViewById(R.id.tv_temp);
+        tv_mois = (TextView) findViewById(R.id.tv_mois);
+        tv_move_sense = (TextView) findViewById(R.id.tv_move_sense);
+        tv_state = (TextView) findViewById(R.id.tv_state);
+        imageView = (ImageView) findViewById(R.id.imageView);
+
+        //----------------------------------
+        //  데이터 센서값 받아오는 Service
+        //----------------------------------
+        intent_data = new Intent(
+                getApplicationContext(),//현재제어권자
+                DataService.class); // 이동할 컴포넌트
+        startService(intent_data); // 서비스 시작
+
+        //------------------------------------
+        //   항상 떠있는 상단바 알림 Service
+        //------------------------------------
+        intent_push = new Intent(
                 getApplicationContext(),//현재제어권자
                 PushService.class); // 이동할 컴포넌트
-        startService(intent); // 서비스 시작
+        startService(intent_push); // 서비스 시작
 
-        //------------------------------
-        //  가스밸브 스위치 리스너
-        //------------------------------
-        Switch s = (Switch) this.findViewById(R.id.switch_gasvalve);
-        s.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+        //데이터 받아와서 3초마다 메인UI 갱신
+        new Thread() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    if (flag == 0) {
-                        showDialog(DIALOG_GASVALVE_OPEN_MESSAGE);
+            public void run() {
+                try {
+                    while(true) {
+                        //   AsyncTask 시작
+                        new DataGetTask().execute("http://211.253.11.58:3000/kang_down");
+                        sleep(2000);      //2초마다 데이터 갱신
                     }
-                } else {
-                    if (flag == 0) {
-                        showDialog(DIALOG_GASVALVE_CLOSE_MESSAGE);
-                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
-        });
-
-        //------------------------------
-        //   실시간 영상보기 버튼 리스너
-        //------------------------------
-        ImageButton btn1 = (ImageButton) this.findViewById(R.id.btn_camera);
-        btn1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, CameraActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        //-------------------------------------------
-        //  가스밸브 스위치 상태 테스트 버튼 리스너
-        //-------------------------------------------
-        ImageButton btn2 = (ImageButton) this.findViewById(R.id.btn_test1);
-        btn2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                GasvalveSwitchLoad();
-            }
-        });
-
-        //-------------------------------------------
-        //  환경설정 값 불러오기 테스트 버튼 리스너
-        //-------------------------------------------
-        ImageButton btn3 = (ImageButton) this.findViewById(R.id.btn_test2);
-        btn3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                SharedPreferences setRefer = PreferenceManager.getDefaultSharedPreferences(mContext);
-                if (setRefer.getBoolean("key_StatePushAlert", true))
-                    Toast.makeText(MainActivity.this, "체크O", Toast.LENGTH_LONG).show();
-                else
-                    Toast.makeText(MainActivity.this, "체크X", Toast.LENGTH_LONG).show();
-            }
-        });
+        }.start();
     }
+
+    //-----------------------------------------------------------
+    //  서버에서 온.습도 받아와서 파싱 후 UI 변경하는 AsyncTask
+    //-----------------------------------------------------------
+    private class DataGetTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... strs) {
+            return DataJSONLoad();
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            try {
+                JSONObject obj = new JSONObject(result);
+                JSONArray datas = obj.getJSONArray("data");
+                JSONObject data = datas.getJSONObject(0);
+
+                tv_temp.setText(data.getString("temp"));
+                tv_mois.setText(data.getString("mois"));
+
+                //움직임 센서 값에 따라 메인UI변경
+                if (data.getString("move").equals("0")) {
+                    tv_move_sense.setText("미감지");
+                } else if ((data.getString("move").equals("1"))) {
+                    tv_move_sense.setText("감지");
+                }
+
+                //현재 상태에 따라 메인UI변경
+                if (data.getString("threat").equals("0")) {
+                    imageView.setBackgroundResource(R.drawable.state_normal);
+                    tv_state.setText(R.string.state_normal);
+                } else if (data.getString("threat").equals("1")) {
+                    imageView.setBackgroundResource(R.drawable.state_warning);
+                    tv_state.setText(R.string.state_warning);
+                } else if (data.getString("threat").equals("2")) {
+                    imageView.setBackgroundResource(R.drawable.state_danger);
+                    tv_state.setText(R.string.state_danger);
+                }
+            } catch (JSONException o) {
+                o.printStackTrace();
+                result = o.toString();
+
+                Toast.makeText(getApplicationContext(), " 서버로부터 데이터를 받아올 수 없습니다.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    public void SleepTime(int delayTime) {
+        long saveTime = System.currentTimeMillis();
+        long currTime = 0;
+        while (currTime - saveTime < delayTime) {
+            currTime = System.currentTimeMillis();
+        }
+    }
+
+    //데이터 값 JSON객체로 불러오기 (SharedPreference)
+    private String DataJSONLoad() {
+        SharedPreferences pref = getSharedPreferences("DataJSON", Activity.MODE_PRIVATE);
+        return pref.getString("Data", "null");
+    }
+
 
     //--------------------------
     //     커스텀 액션바
@@ -133,95 +168,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //------------------------------
+        //   실시간 영상보기 버튼 리스너
+        //------------------------------
+        ImageButton btn1 = (ImageButton) this.findViewById(R.id.btn_camera);
+        btn1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, CameraActivity.class);
+                startActivity(intent);
+            }
+        });
+
         return true;
-    }
-
-
-    //-------------------------------------------------
-    //  가스밸브 스위치 상태값 저장/불러오기 관련 메서드
-    //-------------------------------------------------
-    //가스밸브 스위치 상태값 ON으로 저장 (SharedPreference)
-    private void GasvalveSwitchSaveOn() {
-        SharedPreferences pref = getSharedPreferences("Gasvalve", Activity.MODE_PRIVATE);
-        SharedPreferences.Editor editor = pref.edit();
-        editor.putString("OnOff", "ON");
-        editor.apply();
-    }
-
-    //가스밸브 스위치 상태값 OFF로 저장 (SharedPreference)
-    private void GasvalveSwitchSaveOff() {
-        SharedPreferences pref = getSharedPreferences("Gasvalve", Activity.MODE_PRIVATE);
-        SharedPreferences.Editor editor = pref.edit();
-        editor.putString("OnOff", "OFF");
-        editor.apply();
-    }
-
-    //가스밸브 스위치 상태값 불러오기 (SharedPreference)
-    private void GasvalveSwitchLoad() {
-        SharedPreferences pref = getSharedPreferences("Gasvalve", Activity.MODE_PRIVATE);
-        String onoff = pref.getString("OnOff", "OFF");
-        Toast.makeText(MainActivity.this, "스위치 상태 : " + onoff, Toast.LENGTH_LONG).show();
-    }
-
-    //-------------------------------------------------
-    //  가스밸브 스위치 열고 닫을때 나타나는 대화상자
-    //-------------------------------------------------
-    @Override
-    protected Dialog onCreateDialog(int id) {
-        switch (id) {
-            case DIALOG_GASVALVE_OPEN_MESSAGE:
-                AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
-                builder1.setTitle("")
-                        .setMessage("가스밸브를 여시겠습니까?")
-                        .setCancelable(false)
-                        .setPositiveButton("YES",
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        //YES 눌렀을때 할 행동
-                                        GasvalveSwitchSaveOn();
-                                    }
-                                })
-                        .setNegativeButton("NO",
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        //NO 눌렀을때 할 행동
-                                        Switch s = (Switch) findViewById(R.id.switch_gasvalve);
-                                        flag = 1;
-                                        s.setChecked(false);
-                                        flag = 0;
-                                    }
-                                });
-                AlertDialog alert1 = builder1.create();
-                return alert1;
-            case DIALOG_GASVALVE_CLOSE_MESSAGE:
-                AlertDialog.Builder builder2 = new AlertDialog.Builder(this);
-                builder2.setTitle("")
-                        .setMessage("가스밸브를 닫으시겠습니까?")
-                        .setCancelable(false)
-                        .setPositiveButton("YES",
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        //YES 눌렀을때 할 행동
-                                        GasvalveSwitchSaveOff();
-                                    }
-                                })
-                        .setNegativeButton("NO",
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-                                        //NO 눌렀을때 할 행동
-                                        Switch s = (Switch) findViewById(R.id.switch_gasvalve);
-                                        flag = 1;
-                                        s.setChecked(true);
-                                        flag = 0;
-                                    }
-                                });
-                AlertDialog alert2 = builder2.create();
-                return alert2;
-        }
-        return null;
     }
 }
